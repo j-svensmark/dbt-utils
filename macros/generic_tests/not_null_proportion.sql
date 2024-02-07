@@ -7,10 +7,15 @@
 {% set column_name = kwargs.get('column_name', kwargs.get('arg')) %}
 {% set at_least = kwargs.get('at_least', kwargs.get('arg')) %}
 {% set at_most = kwargs.get('at_most', kwargs.get('arg', 1)) %}
+{% set filter = kwargs.get('filter', kwargs.get('arg', '')) %}
 
 {% if group_by_columns|length() > 0 %}
   {% set select_gb_cols = group_by_columns|join(' ,') + ', ' %}
   {% set groupby_gb_cols = 'group by ' + group_by_columns|join(',') %}
+{% endif %}
+
+{% if filter|length() > 0 %}
+  {% set filter_statement = 'where ' + filter %}
 {% endif %}
 
 with validation as (
@@ -18,6 +23,7 @@ with validation as (
     {{select_gb_cols}}
     sum(case when {{ column_name }} is null then 0 else 1 end) / cast(count(*) as numeric) as not_null_proportion
   from {{ model }}
+  {{filter_statement}}
   {{groupby_gb_cols}}
 ),
 validation_errors as (
